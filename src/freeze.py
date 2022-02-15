@@ -36,17 +36,22 @@ class PipFreezeCLI:
         )
         self.parser.version = self.CLI_VERSION
         self.parser.add_argument("-v", '--version', action='version')
-        self.parser.add_argument('-d', '--dev', action='store_true')
-        self.parser.add_argument('-c', '--core', action='store_true')
-        self.parser.add_argument('-a', '--all', action='store_true')
+        self.parser.add_argument('-d', '--dev', action='store_true',
+                                 help='Cria o arquivo no {} e o arquivo {} com a inclusão do arquivo dev.'.
+                                 format(self.config['files']['dev'], self.config['main']['file']))
+        self.parser.add_argument('-c', '--core', action='store_true',
+                                 help='Cria o arquivo no {} e o arquivo {} com a inclusão do arquivo core.'.
+                                 format(self.config['files']['core'], self.config['main']['file']))
+        self.parser.add_argument('-a', '--all', action='store_true', help='Cria o arquivo no {}.'.
+                                 format(self.config['files']['all']))
         self.parser.add_argument('--force', action='store_true')
 
         parser_args = self.parser.parse_args()
-        self.__createfolder()
 
+        self.__createfolder()
         if parser_args:
             try:
-                is_forced = parser_args.force 
+                is_forced = parser_args.force
                 if parser_args.dev:
                     self.__generate_dev(is_forced)
                 elif parser_args.core:
@@ -61,23 +66,21 @@ class PipFreezeCLI:
             self.parser.print_help()
             sys.exit(1)
 
-
-
     def __createfolder(self):
         if not os.path.isdir(self.config['main']['config']):
             subprocess.run('mkdir -p ' + self.config['main']['config'], shell=True, capture_output=True)
 
     def __generate_dev(self, is_forced):
         print('Inciando freeze dev')
-        self.__freeze_another(target_req= self.config['files']['dev'], compare_req= self.config['files']['core'],
-                              has_force= is_forced)
+        self.__freeze_another(target_req=self.config['files']['dev'], compare_req=self.config['files']['core'],
+                              has_force=is_forced)
         print('Finalizado freeze')
         print('Criado arquivo {}'.format(self.config['files']['dev']))
 
     def __generate_core(self, is_forced):
         print('Inciando freeze core')
-        self.__freeze_another(target_req= self.config['files']['core'], compare_req= self.config['files']['dev'],
-                            has_force= is_forced)
+        self.__freeze_another(target_req=self.config['files']['core'], compare_req=self.config['files']['dev'],
+                              has_force=is_forced)
         print('Finalizado freeze')
         print('Criado arquivo {}'.format(self.config['files']['core']))
 
