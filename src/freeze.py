@@ -4,8 +4,6 @@ import os.path
 import subprocess
 import sys
 import logging
-import traceback
-import uuid
 
 
 class PipFreezeCLI:
@@ -30,17 +28,19 @@ class PipFreezeCLI:
             self.__run()
 
     def __run(self):
+        self.__load_epilod('CADT - IFPE')
         self.parser = argparse.ArgumentParser(
             prog='Freeze-Cli',
             description='Gerencia ambientes de importacao de pip. '
-                        'Você pode usar os ambientes de --core e --dev. '
+                        'Você pode usar os ambientes de --core e --dev.\n'
                         'Quando for desenvolver, insira apenas os pacotes '
-                        'de um ambiente e faça a chamada do freeze_cli.'
+                        'de um ambiente e faça a chamada do freeze_cli.\n'
                         'O freeze_cli verifica se já existe um dos ambientes '
                         'instanciados para remover os pacotes do proximo ambiente '
-                        'instanciado. Por isso é necessário inserir pacotes separadamente.'
-                        'o Freeze_CLi não instala pacotes.',
+                        'instanciado.\nPor isso é necessário inserir pacotes separadamente.\n'
+                        'O Freeze_CLi não instala pacotes.',
             epilog='Desenvolvido por: CADT - IFPE',
+            formatter_class=argparse.RawDescriptionHelpFormatter
             # usage='%(prog)s [options]'
         )
 
@@ -91,20 +91,20 @@ class PipFreezeCLI:
             sys.exit(0)
 
     def __valid_parse_args(self, parser_args):
-        __arg_not_count = ['force', 'debug']
-        lido__format = []
-        valid_args = vars(parser_args[0]).copy()
-        [valid_args.pop(x) for x in __arg_not_count]
-        __len_args_valid = len(list(filter(lambda x: x, valid_args.values())))
+        _arg_not_count = ['force', 'debug']
+        _lido_format = []
+        _valid_args = vars(parser_args[0]).copy()
+        [_valid_args.pop(x) for x in _arg_not_count]
+        len_args_valid = len(list(filter(lambda x: x[1], _valid_args.items())))
         if len(parser_args[1]) > 0:
-            lido__format.append("Argumento inválido {}".format(", ".join(parser_args[1])))
-        if __len_args_valid > 1:
-            lido__format.append('Só deve ser solicitado 1 argumento valido por vez')
+            _lido_format.append("Argumento inválido {}".format(", ".join(parser_args[1])))
+        if len_args_valid > 1:
+            _lido_format.append('Só deve ser solicitado 1 argumento valido por vez')
         else:
-            if __len_args_valid == 0:
-                lido__format.append('O comando --force não com outras opções, apenas com --dev, --core')
-        if len(lido__format) > 0:
-            raise SystemExit(lido__format)
+            if len_args_valid == 0:
+                _lido_format.append('O comando --force não com outras opções, apenas com --dev, --core')
+        if len(_lido_format) > 0:
+            raise SystemExit(_lido_format)
 
 
     def __createfolder(self):
@@ -183,4 +183,7 @@ class PipFreezeCLI:
             logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                 filename='freeze_info.log')
         return
+
+    def __load_epilod(self, desenv: str):
+        pass
 
