@@ -9,7 +9,7 @@ import uuid
 
 
 class PipFreezeCLI:
-    CLI_VERSION = '1.0.0'
+    CLI_VERSION = 'FREEZE_CLI VERSION 1.0.0'
     INI_FILE = 'freeze.ini'
 
     def __load_ini_file(self, filename):
@@ -18,8 +18,6 @@ class PipFreezeCLI:
             os.path.abspath(os.path.join(os.path.dirname(sys.executable), filename))
         self.config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
         if self.config.read(path_config_lib):
-            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                filename='freeze_info.log')
             return True
         else:
             logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -34,10 +32,18 @@ class PipFreezeCLI:
     def __run(self):
         self.parser = argparse.ArgumentParser(
             prog='Freeze-Cli',
-            description='Gerencia ambientes de importacao de pip',
+            description='Gerencia ambientes de importacao de pip. '
+                        'Você pode usar os ambientes de --core e --dev. '
+                        'Quando for desenvolver, insira apenas os pacotes '
+                        'de um ambiente e faça a chamada do freeze_cli.'
+                        'O freeze_cli verifica se já existe um dos ambientes '
+                        'instanciados para remover os pacotes do proximo ambiente '
+                        'instanciado. Por isso é necessário inserir pacotes separadamente.'
+                        'o Freeze_CLi não instala pacotes.',
             epilog='Desenvolvido por: André Alcantara',
-            usage='%(prog)s [options]'
+            # usage='%(prog)s [options]'
         )
+
         self.parser.version = self.CLI_VERSION
         self.parser.add_argument("-v", '--version', action='version')
         self.parser.add_argument('-d', '--dev', action='store_true',
@@ -49,16 +55,23 @@ class PipFreezeCLI:
         self.parser.add_argument('-a', '--all', action='store_true', help='Cria o arquivo no {}.'.
                                  format(self.config['files']['all']))
         self.parser.add_argument('--force', action='store_true', help='Adicionado juntamente com --dev ou --core, '
-                                                                      'força a criação do arquivo como se nao '
-                                                                      'houvesse o outro, adicionando todo o '
-                                                                      'pip-freeze nele.')
+                                                                      'força a criação do arquivo adicionando todo'
+                                                                      ' o pip-freeze nele.')
+        self.parser.add_argument('--debug', action='store_true', help='Cria o arquivo de log para as etapas do '
+                                                                      'código')
 
         parser_args = None
-        try:
-            # parser_args = self.parser.parse_known_args()
-            parser_args = self.parser.parse_args()
-            self.__createfolder()
-            if len(sys.argv) > 1:
+
+        if sys.argv and len(sys.argv) > 1:
+            parser_args = self.parser.parse_known_args()
+            try:
+                self.__valid_parse_args(parser_args)
+                self.__verify_debug(parser_args)
+                __size_underscore = 30
+                logging.info("_" * __size_underscore)
+                parser_args = parser_args[0]
+
+                self.__createfolder()
                 is_forced = parser_args.force
                 if parser_args.dev:
                     self.__generate_dev(is_forced)
@@ -67,17 +80,38 @@ class PipFreezeCLI:
                 elif parser_args.all:
                     self.__generate_all()
                 self.__generate_local_requeriments()
-            else:
+                logging.info("_" * __size_underscore)
+            except SystemExit as erros:
+                for e in erros.args[0]:
+                    print(e)
                 self.parser.print_help()
                 sys.exit(1)
-        except argparse.ArgumentError as e:
-            print("Argumento inválido {}".format(sys.argv[1:][0]))
-            print(e)
-            sys.exit(1)
+        else:
+            self.parser.print_help()
+            sys.exit(0)
+
+    def __valid_parse_args(self, parser_args):
+        __arg_not_count = ['force', 'debug']
+        lido__format = []
+        valid_args = vars(parser_args[0]).copy()
+        [valid_args.pop(x) for x in __arg_not_count]
+        __len_args_valid = len(list(filter(lambda x: x, valid_args.values())))
+        if len(parser_args[1]) > 0:
+            lido__format.append("Argumento inválido {}".format(", ".join(parser_args[1])))
+        if __len_args_valid > 1:
+            lido__format.append('Só deve ser solicitado 1 argumento valido por vez')
+        else:
+            if __len_args_valid == 0:
+                lido__format.append('O comando --force não com outras opções, apenas com --dev, --core')
+        if len(lido__format) > 0:
+            raise SystemExit(lido__format)
+
 
     def __createfolder(self):
         if not os.path.isdir(self.config['main']['config']):
-            subprocess.run('mkdir -p ' + self.config['main']['config'], shell=True, capture_output=True)
+            path = os.path.abspath(self.config['main']['config'])
+            os.makedirs(path)
+            logging.info("Criado pasta {}".format(path))
 
     def __generate_dev(self, is_forced):
         logging.info('Inciando freeze dev')
@@ -143,3 +177,10 @@ class PipFreezeCLI:
             for line in result:
                 file.write("{}\n".format(line))
         logging.info('Criado/Atualizado o arquivo {}'.format(self.config['main']['file']))
+
+    def __verify_debug(self, parser_args):
+        if parser_args[0].debug:
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                                filename='freeze_info.log')
+        return
+
