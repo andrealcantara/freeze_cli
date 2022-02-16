@@ -11,10 +11,10 @@ pip install pyinstaller
 
 O Comando do PyInstaller
 ```bash
-pyinstaller -F --path=src ./src/main.py -n freeze-cli.sh
+pyinstaller -F --path=src src/main.py -n freeze_cli.py --console
 ```
 
-Arquivo freeze.ini que pode ser configurada
+Arquivo freeze.ini que deve ser configurada e adicionado junto ao arquivo
 ```properties
 [main]
 name:requirements

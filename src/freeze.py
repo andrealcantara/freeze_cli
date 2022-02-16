@@ -40,7 +40,7 @@ class PipFreezeCLI:
                         'instanciados para remover os pacotes do proximo ambiente '
                         'instanciado. Por isso é necessário inserir pacotes separadamente.'
                         'o Freeze_CLi não instala pacotes.',
-            epilog='Desenvolvido por: André Alcantara',
+            epilog='Desenvolvido por: CADT - IFPE',
             # usage='%(prog)s [options]'
         )
 
